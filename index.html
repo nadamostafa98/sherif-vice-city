@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#10091d">
+<meta name="description" content="A four-day weekend in Vice City. The countdown to 7 PM tonight.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="SHERIF. // A four-day weekend in Vice City">
+<meta property="og:description" content="Clocking out of real life at 7 PM tonight. Made with ♡ by Nadz.">
+<meta property="og:image" content="og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<title>SHERIF // VICE CITY AWAITS</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="grain"></div>
+<div class="scanlines"></div>
+
+<div class="sky" aria-hidden="true">
+  <div class="night"></div>
+  <canvas id="stars"></canvas>
+  <div class="sun-wrap"><div class="sun"></div></div>
+  <div class="buildings"></div>
+  <div class="grid-floor"><div class="grid-lines"></div></div>
+  <div class="palm palm-left"><span>✳</span></div>
+  <div class="palm palm-right"><span>✳</span></div>
+</div>
+
+<header>
+  <div id="brand" class="brand">LEONIDA <span>AFTER DARK</span></div>
+  <div class="header-right">
+    <div class="live"><i></i> LONDON <b id="clock-lon">--:--</b> <span>♡</span> ALEXANDRIA <b id="clock-cai">--:--</b></div>
+    <button id="sound" class="sound" aria-pressed="false" title="Turn on music and sound effects"><span class="eq"><i></i><i></i><i></i></span><span id="sound-label">TAP FOR RADIO</span></button>
+  </div>
+</header>
+
+<main>
+  <div class="eyebrow">NOVEMBER 19, 2026 <span>///</span> 19:00 GMT</div>
+  <div class="topline">A FOUR-DAY WEEKEND IN VICE CITY FOR</div>
+  <h1 class="glitch" data-text="SHERIF.">SHERIF<span class="dot">.</span></h1>
+  <div id="subtitle" class="subtitle">YOUR NEXT ADVENTURE IS ALMOST HERE</div>
+  <div class="player"><span class="p1">PLAYER 1</span><strong>DEEPBLUE</strong><span id="player-state" class="pstate"><i></i> ONLINE AT 19:00</span></div>
+
+  <section id="countdown" aria-live="off">
+    <p class="intro">CLOCKING OUT OF REAL LIFE IN</p>
+    <div class="timer">
+      <div class="unit"><strong id="hours">00</strong><small>HOURS</small></div><b>:</b>
+      <div class="unit"><strong id="minutes">00</strong><small>MINUTES</small></div><b>:</b>
+      <div class="unit"><strong id="seconds">00</strong><small>SECONDS</small></div>
+    </div>
+
+    <div class="wanted">
+      <span class="wanted-label">WANTED LEVEL</span>
+      <div id="wanted" class="wanted-stars" aria-label="Wanted level">
+        <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+      </div>
+    </div>
+
+    <div class="progress-track"><div id="progress" class="progress-fill"></div></div>
+    <div class="under"><span id="status">WORK MODE: DISENGAGING</span><span id="percent">0% TO FREEDOM</span></div>
+  </section>
+
+  <section id="welcome" class="hidden" aria-live="polite">
+    <div class="unlocked">✦ MISSION UNLOCKED ✦</div>
+    <h2>WELCOME TO<br><em>VICE CITY, DEEPBLUE.</em></h2>
+    <p>You've put in the hours. Now the city is yours, for four whole days.</p>
+    <p class="personal">Love you, Sherif. Go cause a little chaos. ♡</p>
+
+    <div class="freedom">
+      <p class="intro">FREEDOM REMAINING</p>
+      <div class="timer timer-small">
+        <div class="unit"><strong id="fd">0</strong><small>DAYS</small></div><b>:</b>
+        <div class="unit"><strong id="fh">00</strong><small>HOURS</small></div><b>:</b>
+        <div class="unit"><strong id="fm">00</strong><small>MINUTES</small></div><b>:</b>
+        <div class="unit"><strong id="fs">00</strong><small>SECONDS</small></div>
+      </div>
+      <div class="progress-track"><div id="fprogress" class="progress-fill"></div></div>
+      <div class="under"><span id="fstatus">OUT OF OFFICE</span><span id="fpercent">100% FREEDOM LEFT</span></div>
+    </div>
+
+    <button id="celebrate">CELEBRATE AGAIN ✦</button>
+  </section>
+
+  <section id="stream-card" class="stream hidden">
+    <div class="stream-head"><i class="rec"></i><span id="stream-label">DEEPBLUE GOES LIVE AT 7 PM</span></div>
+    <div id="stream-embed" class="stream-embed"></div>
+    <a id="stream-link" class="stream-link" href="#" target="_blank" rel="noopener">WATCH DEEPBLUE LIVE ↗</a>
+  </section>
+
+  <section class="feature">
+    <figure id="wanted-poster" class="poster">
+      <div class="poster-photo"><img src="photo.jpg" alt="DEEPBLUE in Vice City" onerror="document.getElementById('wanted-poster').classList.add('hidden')"></div>
+      <div class="poster-tag">★★★★★ MOST WANTED</div>
+      <figcaption>
+        <div><small>NOW LOADING</small><strong>DEEPBLUE</strong><span>WANTED FOR: SKIPPING REAL LIFE ALL WEEKEND · REWARD: ONE PHONE CALL TO NADZ</span></div>
+        <div class="loadbar"><i></i></div>
+      </figcaption>
+    </figure>
+  </section>
+
+  <section class="days">
+    <h3>THE WEEKEND ITINERARY</h3>
+    <ol id="days">
+      <li data-day="2026-11-19"><small>THU · TONIGHT</small><strong>OPENING NIGHT</strong><span>Clock out. Log in. 7 PM sharp.</span><em></em></li>
+      <li data-day="2026-11-20"><small>FRIDAY</small><strong>DAY OFF</strong><span>No alarm. No emails. Just the city.</span><em></em></li>
+      <li data-day="2026-11-21"><small>SATURDAY</small><strong>FULL SEND</strong><span>Explore every corner of the map.</span><em></em></li>
+      <li data-day="2026-11-22"><small>SUNDAY</small><strong>ONE MORE MISSION</strong><span>And then one more. And one more.</span><em></em></li>
+    </ol>
+  </section>
+
+  <section class="slip">
+    <div class="slip-paper">
+      <div class="stamp">APPROVED</div>
+      <div class="slip-kicker">OFFICIAL DOCUMENT · FORM DB-1</div>
+      <h3>GAMING PERMISSION SLIP</h3>
+      <p>I, <b>Nada</b> (your wife), hereby grant <b>DEEPBLUE</b> (also known as Sherif) unlimited access to Vice City from <b>Thursday 7 PM</b> until <b>Monday morning</b>.</p>
+      <p class="terms-title">Terms &amp; conditions:</p>
+      <ol class="terms">
+        <li>Do not forget you have a wife.</li>
+        <li>At least one call to Nadz per day is required. Non-negotiable.</li>
+        <li>Real food must be eaten at least once a day. Crisps don't count.</li>
+        <li>If I call, you pick up. You may finish the current mission first. <i>One.</i></li>
+        <li>A goodnight message before sleeping. Every night. No exceptions.</li>
+        <li>Stream it for me sometimes so I can watch you play.</li>
+        <li>Have the best weekend ever. That's an order.</li>
+      </ol>
+      <div class="sig"><span class="sig-name">Nadz ♡</span><span class="sig-line">SIGNED &amp; NOTARISED, 19.11.2026</span></div>
+    </div>
+  </section>
+
+  <section id="arcade" class="arcade">
+    <h3>WHILE YOU WAIT</h3>
+    <div class="arcade-grid">
+      <div class="game-wrap">
+        <div class="game-head"><span>ESCAPE THE OFFICE</span><span id="game-best">BEST 0</span></div>
+        <canvas id="game" width="360" height="540" aria-label="Arcade game: dodge the work emails"></canvas>
+        <div class="game-controls"><button id="g-left" aria-label="Move left">◀</button><button id="g-right" aria-label="Move right">▶</button></div>
+        <p class="game-help">← → or A / D to switch lanes · tap the sides on a phone</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="bottom-row">
+    <div class="pill">✦ GTA VI WEEKEND</div>
+    <div class="pill">☾ STARTS TONIGHT AT 7</div>
+    <div class="pill">◷ BACK TO REALITY: MONDAY</div>
+    <div id="stream-pill" class="pill hidden">◉ STREAMING TONIGHT</div>
+  </div>
+</main>
+
+<div class="ticker" aria-hidden="true">
+  <div class="ticker-label">◉ VICE FM 106.9</div>
+  <div class="ticker-track"><div id="ticker" class="ticker-move"></div></div>
+</div>
+
+<button id="cheat-tab" class="cheat-tab" aria-expanded="false" aria-controls="cheat-panel">🎮 CHEATS <b id="cheat-found">0</b>/6</button>
+<aside id="cheat-panel" class="cheats" aria-label="Cheat codes">
+  <div class="cheats-head"><span>CHEAT CODES</span><button id="cheat-close" aria-label="Close">✕</button></div>
+  <p class="cheats-how">Type a code here, or anywhere on the page.</p>
+  <label class="cheat-box"><span>&gt;</span><input id="cheat-input" type="text" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" maxlength="14" placeholder="ENTER CODE"></label>
+  <ul id="cheat-list">
+    <li data-code="NADZ"><b>_ _ _ _</b><span>Your wife's nickname</span></li>
+    <li data-code="DEEPBLUE"><b>_ _ _ _ _ _ _ _</b><span>Your gamer tag</span></li>
+    <li data-code="MONEY"><b>_ _ _ _ _</b><span>Make it rain</span></li>
+    <li data-code="WANTED"><b>_ _ _ _ _ _</b><span>Five stars</span></li>
+    <li data-code="BOOM"><b>_ _ _ _</b><span>Light up the sky</span></li>
+    <li data-code="ALEXANDRIA"><b>_ _ _ _ _ _ _ _ _ _</b><span>Where Nadz is</span></li>
+  </ul>
+</aside>
+
+<footer><span>MADE WITH ♡ BY NADZ, JUST FOR SHERIF</span><span>VICE CITY IS CALLING <span class="arrow">↗</span></span></footer>
+
+<div id="final" class="final hidden" aria-hidden="true">
+  <div id="final-num" class="final-num">10</div>
+  <div class="final-sub">GET READY, DEEPBLUE</div>
+</div>
+<div id="text" class="text hidden" role="status">
+  <div class="text-head"><span class="text-app">✉ MESSAGES</span><span id="text-time" class="text-time">now</span></div>
+  <div class="text-from">NADZ ♡</div>
+  <div id="text-msg" class="text-msg"></div>
+</div>
+<div id="cheat" class="cheat hidden"></div>
+<div id="police" class="police"></div>
+<div id="flash" class="flash"></div>
+<canvas id="confetti" aria-hidden="true"></canvas>
+<script src="script.js"></script>
+</body>
+</html>
