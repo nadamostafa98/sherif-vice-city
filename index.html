@@ -14,7 +14,7 @@
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <title>SHERIF // VICE CITY AWAITS</title>
-<link rel="stylesheet" href="style.css?v=4">
+<link rel="stylesheet" href="style.css?v=5">
 </head>
 <body>
 <div class="grain"></div>
@@ -187,6 +187,12 @@
   <div id="text-from" class="text-from">NADZ ♡</div>
   <div id="text-msg" class="text-msg"></div>
 </div>
+<button id="chat-tab" class="chat-tab hidden" aria-expanded="false" aria-controls="chat">💬 CHAT <b id="chat-unread" class="hidden">0</b></button>
+<aside id="chat" class="chat hidden" aria-label="Chat">
+  <div class="chat-head"><div><strong>💬 VICE CITY CHAT</strong><small id="chat-online"></small></div><button id="chat-close" aria-label="Close chat">✕</button></div>
+  <div id="chat-log" class="chat-log" aria-live="polite"></div>
+  <form id="chat-form" class="chat-form"><input id="chat-input" maxlength="300" autocomplete="off" enterkeyhint="send" placeholder="Message everyone…" aria-label="Message"><button aria-label="Send">➤</button></form>
+</aside>
 <div id="who" class="who hidden" role="dialog" aria-modal="true" aria-labelledby="who-title">
   <div class="who-card">
     <small>CHARACTER SELECT</small>
@@ -200,6 +206,6 @@
 <div id="police" class="police"></div>
 <div id="flash" class="flash"></div>
 <canvas id="confetti" aria-hidden="true"></canvas>
-<script src="script.js?v=4"></script>
+<script src="script.js?v=5"></script>
 </body>
 </html>

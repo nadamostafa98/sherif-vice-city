@@ -35,19 +35,6 @@ const TICKER = [
   "EXPERTS AGREE: DEEPBLUE HAS THE BEST WIFE IN THE WORLD",
 ];
 
-// Little "text messages from your wife" that pop up now and then. Edit freely.
-const WIFE_TEXTS = [
-  "Don't forget you have a wife 👀💍",
-  "Proud of you 🥹 Now go be a menace in Vice City 😈🌴",
-  "Don't forget to eat and have hydration breaks! 🍕💧",
-  "Reminder: your wife is the real main character 💅✨",
-  "Miss you 🥺 Wish I was on the couch next to you 🛋️❤️",
-  "Stream for me whenever you want to. I'll be watching 👀📺",
-  "Don't forget to say goodnight before you sleep 🌙😘",
-  "Who's your favourite person in Vice City? 🤔 Wrong. It's me 😌💖",
-  "Have the best weekend habiby 🎮🔥 I mean it ❤️",
-];
-
 // The text from Nadz that pops up when he unlocks each cheat code. Edit freely.
 const CHEAT_TEXTS = {
   NADZ: "You found the secret code. Hi, I love you ♡",
@@ -433,12 +420,12 @@ if (!reduceMotion) {
   t.style.animationDuration = Math.max(20, t.scrollWidth / 2 / 70) + 's';
 })();
 
-/* ---------- texts from the wife ---------- */
-(function wifeTexts() {
-  let order = [];
+/* ---------- phone-style pop-up (chat messages, hearts, cheat codes) ---------- */
+(function popups() {
   window.showText = (text, from) => show(text, from);
   function show(text, from) {
     $('text-from').textContent = from || 'NADZ ♡';
+    delete $('text').dataset.chat;
     $('text-msg').textContent = text;
     $('text-time').textContent = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/London' });
     $('text').classList.remove('hidden');
@@ -447,13 +434,10 @@ if (!reduceMotion) {
     clearTimeout(show.hide);
     show.hide = setTimeout(() => $('text').classList.add('hidden'), 9000);
   }
-  function next() {
-    if (!order.length) order = WIFE_TEXTS.map((t) => [Math.random(), t]).sort((a, b) => a[0] - b[0]).map((x) => x[1]);
-    show(order.pop());
-    setTimeout(next, 60000 + Math.random() * 60000);
-  }
-  $('text').addEventListener('click', () => $('text').classList.add('hidden'));
-  setTimeout(next, 12000);
+  $('text').addEventListener('click', () => {
+    $('text').classList.add('hidden');
+    if ($('text').dataset.chat && window.openChat) openChat();
+  });
 })();
 
 /* ---------- London ♡ Alexandria clocks (Alexandria uses Cairo's time zone) ---------- */
@@ -779,10 +763,11 @@ document.querySelectorAll('#cheat-list li').forEach((li) => li.addEventListener(
   const myName = () => (me && me !== '-' ? me : '');
   const clean = (s) => String(s || '').toUpperCase().replace(/[^\p{L}\p{N} ._♡-]/gu, '').trim().slice(0, 14);
 
-  function send(t, keepalive) {
-    const body = JSON.stringify({ t, id: ID, n: myName() });
-    fetch(URL_PUB, { method: 'POST', body, keepalive: !!keepalive }).catch(() => {});
+  function send(t, keepalive, extra) {
+    const body = JSON.stringify(Object.assign({ t, id: ID, n: myName() }, extra));
+    return fetch(URL_PUB, { method: 'POST', body, keepalive: !!keepalive }).then((r) => { if (!r.ok) throw r; return r; });
   }
+  const quietSend = (t, keepalive) => send(t, keepalive).catch(() => {});
   function online() {
     const now = Date.now(), names = {};
     for (const id in peers) {
@@ -812,23 +797,24 @@ document.querySelectorAll('#cheat-list li').forEach((li) => li.addEventListener(
     }
     ws = new WebSocket('wss://ntfy.sh/' + topic + '/ws' + (since ? '?since=' + since : ''));
     connectedAt = Date.now();
-    ws.onopen = () => { retry = 1000; send('join'); render(); };
+    ws.onopen = () => { retry = 1000; quietSend('join'); render(); };
     ws.onmessage = (e) => {
       let d, m; try { d = JSON.parse(e.data); m = JSON.parse(d.message); } catch (err) { return; }
       if (d.event !== 'message' || !m || !m.t) return;
       lastId = d.id; store('svcSeen', String(Date.now()));
-      if (m.id === ID) return;
       const n = clean(m.n), old = d.time * 1000 < connectedAt - 5000;
+      if (m.t === 'msg') gotChat(d.id, d.time * 1000, n, m.x, m.id === ID, old);
+      if (m.id === ID) return;
       if (n) remember(n);
       if (old) {                              // missed while away: only hearts matter
         if (m.t === 'heart' && n !== myName() && lastSeen && d.time * 1000 > lastSeen) { away++; awayFrom.add(n || 'SOMEONE'); }
         return;
       }
       const wasHere = n && Object.keys(online()).includes(n);
-      if (m.t === 'bye') { delete peers[m.id]; render(); return; }
+      if (m.t === 'bye') { delete peers[m.id]; render(); renderChat(); return; }
       peers[m.id] = { n, seen: Date.now() };
       if (m.t === 'join') {
-        if (!document.hidden) setTimeout(() => send('here'), 300 + Math.random() * 1500);
+        if (!document.hidden) setTimeout(() => quietSend('here'), 300 + Math.random() * 1500);
         const quiet = Date.now() - (hello[n] || 0) < 10 * 60000;
         if (n && n !== myName() && !wasHere && !quiet && window.showText) hello[n] = Date.now(), showText(n === 'DEEPBLUE' ? 'just logged in 🎮 Player 1 is here' : 'just came online ♡', n);
       }
@@ -858,11 +844,79 @@ document.querySelectorAll('#cheat-list li').forEach((li) => li.addEventListener(
     const now = Date.now();
     if (now - (window._lastHeart || 0) < 2500) return;
     window._lastHeart = now;
-    send('heart');
+    quietSend('heart');
     restart($('send-heart'), 'sent');
     rain(['♡', '♥'], ['#ff75af', '#ffd1e6'], 18);
     const others = Object.keys(online());
     cheatBanner(others.length ? '♡ SENT TO ' + others.join(' & ') : '♡ SENT · THEY\'LL GET IT WHEN THEY\'RE BACK', true);
+  });
+
+  // ---------- live chat: one room, everyone sees every message ----------
+  let chat = []; try { chat = JSON.parse(store('svcChat') || '[]'); } catch (e) {}   // [{ k: ntfy id, at, n, x }]
+  let lastRead = +store('svcRead') || 0;
+  const chatOpen = () => !$('chat').classList.contains('hidden');
+  const hueOf = (n) => { let h = 0; for (const c of n) h = (h * 31 + c.charCodeAt(0)) % 360; return h; };
+  function gotChat(k, at, n, x, mine, old) {
+    x = String(x || '').slice(0, 300).trim();
+    if (!x || chat.some((c) => c.k === k)) return;
+    chat.push({ k, at, n: n || 'GUEST', x });
+    chat.sort((a, b) => a.at - b.at); chat = chat.slice(-150);
+    store('svcChat', JSON.stringify(chat));
+    if (n) remember(n);
+    if (mine || n === myName() || chatOpen()) { if (at > lastRead) setRead(at); }
+    else if (!old && !chatOpen() && window.showText) { showText(x, n || 'GUEST'); $('text').dataset.chat = '1'; }
+    else if (!old) tone(1567.98, .08, 'sine', .1);
+    renderChat();
+  }
+  function setRead(at) { lastRead = Math.max(lastRead, at); store('svcRead', String(lastRead)); }
+  function renderChat() {
+    const log = $('chat-log'), atBottom = log.scrollHeight - log.scrollTop - log.clientHeight < 60;
+    log.textContent = '';
+    if (!chat.length) { const p = document.createElement('p'); p.className = 'chat-empty'; p.textContent = 'No messages yet. Say hi 👋'; log.append(p); }
+    let prev = '';
+    for (const c of chat) {
+      const mine = c.n === myName(), row = document.createElement('div');
+      row.className = 'chat-msg' + (mine ? ' mine' : '');
+      const head = document.createElement('small');
+      const time = new Date(c.at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+      head.textContent = (mine ? 'YOU' : c.n) + ' · ' + time;
+      if (!mine) head.style.color = 'hsl(' + hueOf(c.n) + ' 90% 72%)';
+      const p = document.createElement('p'); p.textContent = c.x;
+      if (prev !== c.n) row.append(head);
+      row.append(p); log.append(row); prev = c.n;
+    }
+    if (atBottom || chatOpen()) log.scrollTop = log.scrollHeight;
+    const unread = chat.filter((c) => c.at > lastRead && c.n !== myName()).length;
+    $('chat-unread').textContent = unread > 9 ? '9+' : unread;
+    $('chat-unread').classList.toggle('hidden', !unread || chatOpen());
+    const others = Object.keys(online());
+    $('chat-online').textContent = others.length ? others.join(', ') + ' online' : 'nobody else online';
+  }
+  function setChat(open) {
+    $('chat').classList.toggle('hidden', !open);
+    $('chat-tab').setAttribute('aria-expanded', String(open));
+    if (open) {
+      if (chat.length) setRead(chat[chat.length - 1].at);
+      $('text').classList.add('hidden');
+      renderChat();
+      if (!myName()) { ask(); return; }
+      if (matchMedia('(hover:hover)').matches) $('chat-input').focus();
+    } else renderChat();
+  }
+  window.openChat = () => setChat(true);
+  $('chat-tab').addEventListener('click', () => setChat(!chatOpen()));
+  $('chat-close').addEventListener('click', () => setChat(false));
+  addEventListener('keydown', (e) => { if (e.key === 'Escape' && chatOpen()) setChat(false); });
+  $('chat-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const x = $('chat-input').value.trim();
+    if (!x) return;
+    if (!myName()) { ask(); return; }
+    $('chat-input').value = '';
+    send('msg', false, { x: x.slice(0, 300) }).catch(() => {
+      $('chat-input').value = x;
+      cheatBanner('MESSAGE NOT SENT · TRY AGAIN IN A FEW SECONDS', true);
+    });
   });
 
   // Character select: starts empty; every name anyone types becomes a one-tap button.
@@ -890,23 +944,24 @@ document.querySelectorAll('#cheat-list li').forEach((li) => li.addEventListener(
     const was = myName();
     me = clean(name) || '-'; store('svcName', me); if (me !== '-') remember(me);
     $('who').classList.add('hidden');
-    if (ws && ws.readyState === 1 && was !== myName()) send('join');
-    render();
+    if (ws && ws.readyState === 1 && was !== myName()) quietSend('join');
+    render(); renderChat();
   }
   $('who-form').addEventListener('submit', (e) => { e.preventDefault(); choose($('who-input').value); });
   $('who-skip').addEventListener('click', () => choose('-'));
   $('lobby-who').addEventListener('click', ask);
 
   // Leaving the page / switching apps counts as offline; coming back says hello again.
-  addEventListener('pagehide', () => send('bye', true));
+  addEventListener('pagehide', () => quietSend('bye', true));
   document.addEventListener('visibilitychange', () => {
-    if (document.hidden) { send('bye', true); return; }
-    if (!ws) connect(); else if (ws.readyState === 1) send('join');
+    if (document.hidden) { quietSend('bye', true); return; }
+    if (!ws) connect(); else if (ws.readyState === 1) quietSend('join');
   });
-  setInterval(() => { if (!document.hidden && ws && ws.readyState === 1) send('beat'); render(); }, BEAT);
+  setInterval(() => { if (!document.hidden && ws && ws.readyState === 1) quietSend('beat'); render(); }, BEAT);
 
   $('lobby').classList.remove('hidden');
-  render();
+  $('chat-tab').classList.remove('hidden');
+  render(); renderChat();
   connect();
   if (!me) setTimeout(ask, 600);
 })();

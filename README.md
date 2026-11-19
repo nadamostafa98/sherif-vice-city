@@ -9,7 +9,7 @@ A personalized, synthwave-style countdown to **Thursday 19 November 2026, 7:00 P
 - **After 7 PM:** "WELCOME TO VICE CITY, DEEPBLUE", a days/hours/minutes clock counting down to Monday 9 AM, and the itinerary marks each day as now playing or complete.
 - **Sound:** off by default (browsers block it until someone clicks). Click the flashing **TAP FOR RADIO** button in the top right to start a looping synthwave track, plus the countdown beeps, fanfare and fireworks sounds.
 - **Radio ticker:** joke headlines at the bottom. You can edit them in `script.js` (`TICKER`).
-- **Texts from his wife:** a phone-style message pops up every 1–2 minutes. Edit them in `script.js` (`WIFE_TEXTS`).
+- **Live chat:** the CHAT button (bottom right) opens a group chat. Everyone with the page open sees every message, with names and times. New messages pop up as a phone-style text when the chat is closed, and the button shows how many are unread. Messages go through the same public ntfy.sh room as "who's online", so don't send anything private.
 - **Gaming permission slip:** an "APPROVED" permission slip with terms & conditions, in `index.html`.
 - **Stream panel (optional):** see below.
 - **London ♡ Alexandria clocks** in the header.
