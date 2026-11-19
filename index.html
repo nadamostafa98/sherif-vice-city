@@ -44,6 +44,10 @@
   <h1 class="glitch" data-text="SHERIF.">SHERIF<span class="dot">.</span></h1>
   <div id="subtitle" class="subtitle">YOUR NEXT ADVENTURE IS ALMOST HERE</div>
   <div class="player"><span class="p1">PLAYER 1</span><strong>DEEPBLUE</strong><span id="player-state" class="pstate"><i></i> ONLINE AT 19:00</span></div>
+  <div id="lobby" class="lobby hidden">
+    <button id="lobby-who" class="lobby-who" title="Change your name"><i></i><span id="lobby-list">CONNECTING…</span></button>
+    <button id="send-heart" class="send-heart">SEND ♡</button>
+  </div>
 
   <section id="countdown" aria-live="off">
     <p class="intro">CLOCKING OUT OF REAL LIFE IN</p>
@@ -180,8 +184,20 @@
 </div>
 <div id="text" class="text hidden" role="status">
   <div class="text-head"><span class="text-app">✉ MESSAGES</span><span id="text-time" class="text-time">now</span></div>
-  <div class="text-from">NADZ ♡</div>
+  <div id="text-from" class="text-from">NADZ ♡</div>
   <div id="text-msg" class="text-msg"></div>
+</div>
+<div id="who" class="who hidden" role="dialog" aria-modal="true" aria-labelledby="who-title">
+  <div class="who-card">
+    <small>CHARACTER SELECT</small>
+    <h3 id="who-title">WHO'S PLAYING?</h3>
+    <div class="who-pick">
+      <button type="button" data-name="DEEPBLUE">DEEPBLUE<small>SHERIF</small></button>
+      <button type="button" data-name="NADZ">NADZ<small>THE WIFE</small></button>
+    </div>
+    <form id="who-form" class="who-form"><input id="who-input" maxlength="14" autocomplete="off" placeholder="OR TYPE YOUR NAME" aria-label="Your name"><button>GO</button></form>
+    <button type="button" id="who-skip" class="who-skip">just looking</button>
+  </div>
 </div>
 <div id="cheat" class="cheat hidden"></div>
 <div id="police" class="police"></div>

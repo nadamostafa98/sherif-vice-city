@@ -13,9 +13,10 @@ A personalized, synthwave-style countdown to **Thursday 19 November 2026, 7:00 P
 - **Gaming permission slip:** an "APPROVED" permission slip with terms & conditions, in `index.html`.
 - **Stream panel (optional):** see below.
 - **London ♡ Alexandria clocks** in the header.
-- **Arcade game, ESCAPE THE OFFICE:** dodge emails and meetings, grab hearts from Nadz. Arrow keys or A/D on a computer, tap the sides or the ◀ ▶ buttons on a phone.
+- **Arcade game, ESCAPE THE OFFICE:** dodge emails, deadlines and new shows (edit `WORK` in `script.js`), and gobble up the friends on the road (the car's bonnet chomps them). Edit who appears in `script.js` (`PICKUPS`). Arrow keys or A/D on a computer, tap the sides or the ◀ ▶ buttons on a phone.
 - **MOST WANTED loading screen:** shows `photo.jpg` (his Vice City portrait) with a loading bar that fills up as 7 PM gets closer. Remove the file and the card hides itself.
 - **Cheat codes:** type them in the CHEAT CODES console next to the game (works on phones), or anywhere on the page with a keyboard: `NADZ` (hearts and a secret text), `DEEPBLUE` (blue mode), `MONEY` (makes it rain), `WANTED` (police lights), `BOOM` (fireworks), `ALEXANDRIA` (seaside rain).
+- **Who's online + send a heart:** the first visit asks "WHO'S PLAYING?" (DEEPBLUE, NADZ, or type a name). A bar under PLAYER 1 shows who has the page open right now, and **SEND ♡** rains hearts and pops a message on everyone else's screen. Hearts sent while someone was away show up as a summary when they come back (up to ~12 hours). Tap the bar to change your name. This uses [ntfy.sh](https://ntfy.sh), a free public relay with no account; the room name is `ROOM` in `script.js`. Add `?room=test` to the address to try it without the real room. It only works on the live site, not from a file on your computer.
 - **Link preview:** `og-image.png` is the picture WhatsApp/iMessage show when you send the link. Upload it with the other files.
 
 ## Preview the finale

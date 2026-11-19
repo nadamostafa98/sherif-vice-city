@@ -59,6 +59,21 @@ const CHEAT_TEXTS = {
   ALL: "ALL 6 cheats found 🏆 Officially the best player I know. Now call me ♡",
 };
 
+// The tiny humans the car gobbles up in the arcade game. Add as many as you like.
+//   name:  shown on the token and in the "+100" pop-up
+//   says:  what they shout in their speech bubble (otherwise their name)
+//   icon:  optional emoji or letter on their shirt (otherwise the first letter of the name)
+//   color: shirt colour   hair: hair colour   glasses: true   gym: true (gym bro: tank top, big arms, dumbbell)
+const PICKUPS = [
+  { name: 'HARRY', says: 'I HAVE A NEW SHOW FOR YOU!', color: '#5ff3ff', hair: '#ffe27a', glasses: true },
+  { name: 'FINN', says: "WHAT'S THE CRAIC?", color: '#3ddc84', icon: '☘', hair: '#5a3a22' },
+  { name: 'CONNER', says: 'WANNA COME TO THE GYM?', color: '#a88aff', hair: '#2a1a12', gym: true },
+];
+
+// "Who's online" + "send a heart" go through ntfy.sh, a free public message relay (no account).
+// Anyone who knows this room name could listen in, so keep it unguessable. Add ?room=test to try it privately.
+const ROOM = 'deepblue-nadz-vice-city-7q4k9x2m';
+
 /* ============================================================= */
 
 const $ = (id) => document.getElementById(id);
@@ -421,8 +436,9 @@ if (!reduceMotion) {
 /* ---------- texts from the wife ---------- */
 (function wifeTexts() {
   let order = [];
-  window.showText = (text) => show(text);
-  function show(text) {
+  window.showText = (text, from) => show(text, from);
+  function show(text, from) {
+    $('text-from').textContent = from || 'NADZ ♡';
     $('text-msg').textContent = text;
     $('text-time').textContent = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/London' });
     $('text').classList.remove('hidden');
@@ -458,8 +474,8 @@ function rain(chars, colors, n, size = 28) {
   }
   kick();
 }
-function cheatBanner(text) {
-  $('cheat').textContent = 'CHEAT ACTIVATED · ' + text;
+function cheatBanner(text, plain) {
+  $('cheat').textContent = plain ? text : 'CHEAT ACTIVATED · ' + text;
   $('cheat').classList.remove('hidden'); restart($('cheat'), 'in');
   clearTimeout(cheatBanner.t); cheatBanner.t = setTimeout(() => $('cheat').classList.add('hidden'), 3200);
   tone(523.25, .1, 'square', .1); tone(783.99, .1, 'square', .1, .1); tone(1046.5, .25, 'square', .1, .2);
@@ -524,15 +540,24 @@ document.querySelectorAll('#cheat-list li').forEach((li) => li.addEventListener(
   const GW = 360, GH = 540, ROAD_L = 30, LANE = 100, PY = GH - 110;
   const scale = Math.min(2, window.devicePixelRatio || 1);
   cv.width = GW * scale; cv.height = GH * scale; g.scale(scale, scale);
-  const WORK = ['EMAIL', 'MEETING', 'DEADLINE', 'REPLY ALL', 'URGENT!!', 'TEAMS CALL', 'OVERTIME', 'QUICK SYNC', 'MONDAY'];
+  // The work he dodges: marketing tickets for shows and events. Keep each one short (about 10 letters max).
+  const WORK = ['EMAIL', 'DEADLINE', 'NEW SHOW', 'NEW EVENT', 'TICKETS', 'CAMPAIGN',
+    'AD COPY', 'POSTER', 'BRIEF', 'REPORT', 'KPIs', 'REPLY ALL', 'URGENT!!', 'TEAMS CALL', 'QUICK SYNC', 'MONDAY'];
   const BUSTED = ['Your boss saw you online.', 'Caught by a 4:59 PM meeting invite.', "Reply-all'd into oblivion.",
-    'Someone said "quick question".', 'The office pulled you back in.'];
-  let state = 'ready', lane = 1, px = laneX(1), obs = [], pops = [], speed = 260, score = 0, dist = 0, spawnIn = .6, last = 0, raf = 0, msg = '', shakeT = 0;
+    'Someone said "quick question".', 'The office pulled you back in.',
+    'They need the poster "by EOD".'];
+  const CHOMPS = ['CHOMP!', 'GULP!', 'NOM NOM', 'YUM!', 'SNACK!'];
+  const TOKEN_COLORS = ['#5ff3ff', '#ffd18d', '#a88aff', '#7dff9b', '#ff9a78'];
+  const FRIENDS = (PICKUPS.length ? PICKUPS : [{ name: 'BOB' }]).map((p, i) => ({
+    name: String(p.name || '?').toUpperCase().slice(0, 10), icon: p.icon || String(p.name || '?').charAt(0).toUpperCase(),
+    says: String(p.says || String(p.name || '?').toUpperCase() + '!').slice(0, 30),
+    color: p.color || TOKEN_COLORS[i % TOKEN_COLORS.length], hair: p.hair || '#3a2a20', glasses: !!p.glasses, gym: !!p.gym }));
+  let state = 'ready', lane = 1, px = laneX(1), obs = [], pops = [], eaten = [], chompT = 0, speed = 260, score = 0, dist = 0, spawnIn = .6, last = 0, raf = 0, msg = '', shakeT = 0;
   let best = 0; try { best = +localStorage.getItem('dbBest') || 0; } catch (e) {}
   $('game-best').textContent = 'BEST ' + best;
   function laneX(l) { return ROAD_L + LANE * l + LANE / 2; }
   function rr(x, y, w, h, r) { g.beginPath(); if (g.roundRect) g.roundRect(x, y, w, h, r); else g.rect(x, y, w, h); }
-  function reset() { lane = 1; px = laneX(1); obs = []; pops = []; speed = 260; score = 0; dist = 0; spawnIn = .6; }
+  function reset() { lane = 1; px = laneX(1); obs = []; pops = []; eaten = []; chompT = 0; speed = 260; score = 0; dist = 0; spawnIn = .6; }
   function start() { reset(); state = 'play'; last = performance.now(); cancelAnimationFrame(raf); raf = requestAnimationFrame(frame); tone(660, .08); tone(990, .12, 'square', .1, .08); }
   function move(d) { if (state !== 'play') { start(); return; } lane = Math.max(0, Math.min(2, lane + d)); tone(440 + lane * 110, .05, 'square', .05); }
   window.stopGame = () => { state = 'ready'; cancelAnimationFrame(raf); };
@@ -556,7 +581,7 @@ document.querySelectorAll('#cheat-list li').forEach((li) => li.addEventListener(
   function spawn() {
     const lanes = [0, 1, 2].sort(() => Math.random() - .5);
     const heart = Math.random() < .22;
-    obs.push({ lane: lanes[0], y: -60, heart, label: heart ? '♥' : pick(WORK), w: heart ? 44 : 84, h: heart ? 44 : 50 });
+    obs.push({ lane: lanes[0], y: -60, heart, friend: heart ? pick(FRIENDS) : null, label: heart ? '' : pick(WORK), w: heart ? 44 : 84, h: heart ? 44 : 50 });
     if (!heart && score > 400 && Math.random() < .35) obs.push({ lane: lanes[1], y: -60 - Math.random() * 40, heart: false, label: pick(WORK), w: 84, h: 50 });
   }
   function frame(now) {
@@ -571,11 +596,19 @@ document.querySelectorAll('#cheat-list li').forEach((li) => li.addEventListener(
     for (const o of obs) {
       const ox = laneX(o.lane);
       if (Math.abs(ox - px) < (o.w / 2 + 18) && o.y + o.h > PY + 8 && o.y < PY + 68) {
-        if (o.heart) { o.hit = true; score += 100; pops.push({ x: ox, y: PY - 10, t: 1, text: '+100 ♡ NADZ' }); tone(1318, .1, 'triangle', .1); tone(1760, .15, 'triangle', .1, .08); }
+        if (o.heart) {
+          o.hit = true; score += 100; chompT = .35;
+          eaten.push({ f: o.friend, x: ox, y: o.y + o.h / 2, t: .3 });
+          pops.push({ x: ox, y: PY - 14, t: 1.1, text: '+100 ' + o.friend.name + ' · ' + pick(CHOMPS), color: o.friend.color });
+          tone(330, .06, 'square', .1); tone(220, .08, 'square', .1, .07); tone(1318, .12, 'triangle', .08, .14);
+        }
         else { gameOver(); return; }
       }
     }
     obs = obs.filter((o) => o.y < GH + 60 && !o.hit);
+    chompT = Math.max(0, chompT - dt);
+    for (const e of eaten) { e.t -= dt; e.x += (px - e.x) * Math.min(1, dt * 20); e.y += (PY + 6 - e.y) * Math.min(1, dt * 20); }
+    eaten = eaten.filter((e) => e.t > 0);
     for (const p of pops) { p.t -= dt; p.y -= 40 * dt; }
     pops = pops.filter((p) => p.t > 0);
     draw();
@@ -605,8 +638,7 @@ document.querySelectorAll('#cheat-list li').forEach((li) => li.addEventListener(
     for (const o of obs) {
       const x = laneX(o.lane);
       if (o.heart) {
-        g.shadowColor = '#ff75af'; g.shadowBlur = 18; g.fillStyle = '#ff75af';
-        g.font = '900 40px "DM Sans", sans-serif'; g.fillText('♥', x, o.y + o.h / 2);
+        token(o.friend, x, o.y + o.h / 2, 1, 'say');
       } else {
         g.shadowColor = '#ff3b5c'; g.shadowBlur = 16; g.fillStyle = '#2a0a1a'; g.strokeStyle = '#ff3b5c'; g.lineWidth = 2.5;
         rr(x - o.w / 2, o.y, o.w, o.h, 8); g.fill(); g.stroke();
@@ -615,16 +647,22 @@ document.querySelectorAll('#cheat-list li').forEach((li) => li.addEventListener(
       g.shadowBlur = 0;
     }
     if (state !== 'ready') car(px, PY);
-    for (const p of pops) { g.globalAlpha = Math.max(0, p.t); g.fillStyle = '#ffd1e6'; g.font = '800 15px "DM Sans", sans-serif'; g.fillText(p.text, p.x, p.y); g.globalAlpha = 1; }
+    for (const e of eaten) token(e.f, e.x, e.y, Math.max(.05, e.t / .3), true);
+    for (const p of pops) {
+      g.globalAlpha = Math.min(1, Math.max(0, p.t)); g.fillStyle = p.color || '#ffd1e6'; g.font = '800 15px "DM Sans", sans-serif';
+      g.fillText(p.text, Math.max(95, Math.min(GW - 95, p.x)), p.y); g.globalAlpha = 1;
+    }
     g.textAlign = 'left'; g.fillStyle = '#fff'; g.font = '800 14px "DM Sans", sans-serif';
     if (state === 'play' || state === 'over') g.fillText('SCORE ' + Math.floor(score), 12, 20);
     if (state !== 'play') {
       g.fillStyle = '#0b0614cc'; g.fillRect(-10, -10, GW + 20, GH + 20);
       g.textAlign = 'center';
       if (state === 'ready') {
-        car(GW / 2, 280);
+        car(GW / 2, 266);
         title('ESCAPE', 140); title('THE OFFICE', 195);
-        sub('Dodge the work. Grab the ♥ from Nadz.', 400); prompt('TAP OR PRESS SPACE TO DRIVE', 440);
+        sub('Dodge the work. Gobble up the gang.', 400);
+        FRIENDS.slice(0, 5).forEach((f, i, a) => token(f, GW / 2 + (i - (a.length - 1) / 2) * 58, 362, .62, 'name'));
+        idle(); prompt('TAP OR PRESS SPACE TO DRIVE', 440);
       } else if (state === 'paused') {
         title('PAUSED', 240); prompt('TAP TO START AGAIN', 300);
       } else {
@@ -640,11 +678,81 @@ document.querySelectorAll('#cheat-list li').forEach((li) => li.addEventListener(
   function title(t, y) { g.shadowColor = '#ff4eab'; g.shadowBlur = 20; g.fillStyle = '#fff'; g.font = '900 54px "Barlow Condensed", Impact, sans-serif'; g.fillText(t, GW / 2, y); g.shadowBlur = 0; }
   function sub(t, y) { g.fillStyle = '#ffdccc'; g.font = '600 14px "DM Sans", sans-serif'; g.fillText(t, GW / 2, y); }
   function prompt(t, y) { g.fillStyle = '#5ff3ff'; g.font = '800 13px "DM Sans", sans-serif'; g.fillText(t, GW / 2, y); }
+  // A friend: a tiny human in their shirt colour, waving their arms in panic, name underneath.
+  // mode: 'say' = speech bubble above, 'name' = name tag below, nothing = no label
+  function token(f, x, y, s, mode) {
+    const t = performance.now() / 1000 + f.name.length, wave = Math.sin(t * 14) * .5, step = Math.sin(t * 12) * 4;
+    g.save(); g.translate(x, y); g.scale(s, s);
+    g.lineCap = 'round'; g.shadowColor = f.color; g.shadowBlur = 14;
+    const SKIN = '#ffd7b5', sh = f.gym ? 9 : 5, arm = f.gym ? 12 : 11;   // gym bros get wide shoulders
+    const a1 = .8 + wave, a2 = .8 - wave;
+    const lx = -sh - 1 - arm * Math.cos(a1), ly = -4 - arm * Math.sin(a1), rx = sh + 1 + arm * Math.cos(a2), ry = -4 - arm * Math.sin(a2);
+    g.strokeStyle = SKIN; g.lineWidth = f.gym ? 6.5 : 4;          // arms up, flailing
+    g.beginPath(); g.moveTo(-sh, -4); g.lineTo(lx, ly); g.stroke();
+    g.beginPath(); g.moveTo(sh, -4); g.lineTo(rx, ry); g.stroke();
+    if (f.gym) {
+      g.fillStyle = SKIN;                                          // biceps
+      g.beginPath(); g.arc((-sh + lx) / 2 - 1, (-4 + ly) / 2, 4.2, 0, 7); g.arc((sh + rx) / 2 + 1, (-4 + ry) / 2, 4.2, 0, 7); g.fill();
+      g.save(); g.translate(rx, ry); g.rotate(-.4);                // dumbbell
+      g.fillStyle = '#c9c9d6'; g.fillRect(-7, -1, 14, 2); g.fillStyle = '#55556a'; g.fillRect(-9, -4, 4, 8); g.fillRect(5, -4, 4, 8);
+      g.restore();
+    }
+    g.strokeStyle = '#2b2350'; g.lineWidth = f.gym ? 5.5 : 4.5;   // running legs
+    g.beginPath(); g.moveTo(-3, 9); g.lineTo(-4 - step / 2, 20); g.stroke();
+    g.beginPath(); g.moveTo(3, 9); g.lineTo(4 + step / 2, 20); g.stroke();
+    if (f.gym) { g.fillStyle = SKIN; rr(-10, -8, 20, 18, 6); g.fill(); g.fillStyle = f.color; rr(-6.5, -6, 13, 17, 4); g.fill(); }   // tank top
+    else { g.fillStyle = f.color; rr(-7, -7, 14, 18, 5); g.fill(); }   // shirt
+    g.shadowBlur = 0;
+    g.fillStyle = '#10091d'; g.font = '900 10px "Barlow Condensed", "DM Sans", sans-serif'; g.fillText(f.icon, 0, 2.5);
+    g.fillStyle = SKIN; g.beginPath(); g.arc(0, -14, 7, 0, 7); g.fill();   // head
+    g.fillStyle = f.hair;                                          // hair
+    g.beginPath(); g.arc(0, -15, 7.4, Math.PI * 1.05, Math.PI * 1.95); g.lineTo(5, -17.5); g.quadraticCurveTo(0, -19.5, -6.5, -16.5); g.fill();
+    g.fillStyle = '#10091d';                                       // shocked face
+    g.beginPath(); g.arc(-2.5, -14.5, 1.2, 0, 7); g.arc(2.5, -14.5, 1.2, 0, 7); g.fill();
+    g.beginPath(); g.ellipse(0, -10.5, 1.6, 2, 0, 0, 7); g.fill();
+    if (f.glasses) {
+      g.strokeStyle = '#10091d'; g.lineWidth = 1.1;
+      g.beginPath(); g.arc(-2.7, -14.5, 2.4, 0, 7); g.stroke(); g.beginPath(); g.arc(2.7, -14.5, 2.4, 0, 7); g.stroke();
+      g.beginPath(); g.moveTo(-.4, -14.8); g.lineTo(.4, -14.8); g.stroke();
+    }
+    if (mode === 'say') {
+      g.font = '800 11px "DM Sans", sans-serif'; const w = g.measureText(f.says).width + 14;
+      const bx = Math.max(-x + w / 2 + 4, Math.min(GW - x - w / 2 - 4, 0));   // keep the bubble on screen
+      g.fillStyle = '#fff'; rr(bx - w / 2, -48, w, 20, 10); g.fill();
+      g.beginPath(); g.moveTo(-4, -29); g.lineTo(4, -29); g.lineTo(0, -22); g.fill();
+      g.fillStyle = '#10091d'; g.fillText(f.says, bx, -37.5);
+    } else if (mode === 'name') {
+      g.translate(0, 2);
+      g.font = '800 11px "DM Sans", sans-serif'; const w = g.measureText(f.name).width + 12;
+      g.fillStyle = '#10091dcc'; rr(-w / 2, 25, w, 16, 8); g.fill();
+      g.fillStyle = '#fff'; g.fillText(f.name, 0, 33.5);
+    }
+    g.restore();
+  }
+  // Keep the start screen's little humans waving while nobody is playing.
+  let idleRaf = 0;
+  function idle() {
+    if (idleRaf || reduceMotion) return;
+    idleRaf = requestAnimationFrame(() => {
+      idleRaf = 0;
+      if (state === 'ready' && !document.hidden && !$('arcade').classList.contains('hidden')) draw();
+      else if (state === 'ready') setTimeout(idle, 1000);
+    });
+  }
   function car(x, y) {
     g.save(); g.translate(x, y);
     g.shadowColor = '#5ff3ff'; g.shadowBlur = 20;
     g.fillStyle = '#5ff3ff'; rr(-22, 0, 44, 74, 12); g.fill();
     g.shadowBlur = 0;
+    if (chompT > 0) {                         // the bonnet opens into a chomping mouth
+      const open = Math.abs(Math.sin((.35 - chompT) / .35 * Math.PI * 2)) * 16 + 4;
+      g.fillStyle = '#2a0a1a'; rr(-18, -open / 2 + 2, 36, open, 6); g.fill();
+      g.fillStyle = '#fff';
+      for (let k = -14; k <= 10; k += 8) {
+        g.beginPath(); g.moveTo(k, -open / 2 + 2); g.lineTo(k + 4, -open / 2 + 7); g.lineTo(k + 8, -open / 2 + 2); g.fill();
+        g.beginPath(); g.moveTo(k, open / 2 + 2); g.lineTo(k + 4, open / 2 - 3); g.lineTo(k + 8, open / 2 + 2); g.fill();
+      }
+    }
     g.fillStyle = '#10223a'; rr(-16, 14, 32, 18, 5); g.fill(); rr(-16, 46, 32, 12, 4); g.fill();
     g.fillStyle = '#ff2e4d'; g.fillRect(-20, 68, 10, 4); g.fillRect(10, 68, 10, 4);
     g.fillStyle = '#fff6c8'; g.fillRect(-19, 1, 9, 4); g.fillRect(10, 1, 9, 4);
@@ -652,6 +760,134 @@ document.querySelectorAll('#cheat-list li').forEach((li) => li.addEventListener(
   }
   draw();
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (state !== 'play') draw(); });
+})();
+
+/* ---------- who's online + send a heart (live, between everyone who has the page open) ---------- */
+(function lobby() {
+  if (!window.WebSocket || !window.fetch || location.protocol === 'file:') return;
+  const topic = (params.get('room') || ROOM).replace(/[^\w-]/g, '').slice(0, 64);
+  const URL_PUB = 'https://ntfy.sh/' + topic;
+  const BEAT = 4 * 60000, EXPIRE = 9 * 60000;
+  const store = (k, v) => { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) {} };
+  const ID = Math.random().toString(36).slice(2, 10);
+  let me = store('svcName') || '';            // '' = not asked yet, '-' = just looking
+  const peers = {};                           // id -> { n: name, seen: ms }
+  const hello = {};                           // name -> last time we announced them
+  let ws = null, lastId = '', retry = 1000, connectedAt = 0, away = 0, awayFrom = new Set();
+  const myName = () => (me && me !== '-' ? me : '');
+  const clean = (s) => String(s || '').toUpperCase().replace(/[^\p{L}\p{N} ._♡-]/gu, '').trim().slice(0, 14);
+
+  function send(t, keepalive) {
+    const body = JSON.stringify({ t, id: ID, n: myName() });
+    fetch(URL_PUB, { method: 'POST', body, keepalive: !!keepalive }).catch(() => {});
+  }
+  function online() {
+    const now = Date.now(), names = {};
+    for (const id in peers) {
+      if (now - peers[id].seen > EXPIRE) { delete peers[id]; continue; }
+      const n = peers[id].n || 'GUEST'; names[n] = (names[n] || 0) + 1;
+    }
+    delete names[myName()];                   // me in another tab
+    return names;
+  }
+  function render() {
+    const names = online(), others = Object.keys(names);
+    const list = $('lobby-list'); list.textContent = '';
+    const add = (tag, text) => { const el = document.createElement(tag); el.textContent = text; list.append(el); };
+    if (myName()) { add('b', myName()); add('em', ' (YOU)'); }
+    else add('span', 'YOU');
+    if (!others.length) add('span', ' · NOBODY ELSE HERE YET');
+    else others.forEach((n) => { add('span', ' · '); add('b', names[n] > 1 && n === 'GUEST' ? names[n] + ' GUESTS' : n); });
+    add('span', ` · ${others.length ? Object.values(names).reduce((a, b) => a + b, 0) + 1 : 1} ONLINE`);
+    $('lobby-who').classList.toggle('live', !!ws && ws.readyState === 1);
+  }
+
+  function connect() {
+    let since = lastId;
+    if (!since) {                             // first time: catch up on hearts sent since the last visit (ntfy keeps 12 h)
+      const last = +store('svcSeen') || 0;
+      since = last ? String(Math.floor(Math.max(last, Date.now() - 11 * 3600000) / 1000)) : '';
+    }
+    ws = new WebSocket('wss://ntfy.sh/' + topic + '/ws' + (since ? '?since=' + since : ''));
+    connectedAt = Date.now();
+    ws.onopen = () => { retry = 1000; send('join'); render(); };
+    ws.onmessage = (e) => {
+      let d, m; try { d = JSON.parse(e.data); m = JSON.parse(d.message); } catch (err) { return; }
+      if (d.event !== 'message' || !m || !m.t) return;
+      lastId = d.id; store('svcSeen', String(Date.now()));
+      if (m.id === ID) return;
+      const n = clean(m.n), old = d.time * 1000 < connectedAt - 5000;
+      if (old) {                              // missed while away: only hearts matter
+        if (m.t === 'heart' && n !== myName()) { away++; awayFrom.add(n || 'SOMEONE'); }
+        return;
+      }
+      const wasHere = n && Object.keys(online()).includes(n);
+      if (m.t === 'bye') { delete peers[m.id]; render(); return; }
+      peers[m.id] = { n, seen: Date.now() };
+      if (m.t === 'join') {
+        if (!document.hidden) setTimeout(() => send('here'), 300 + Math.random() * 1500);
+        const quiet = Date.now() - (hello[n] || 0) < 10 * 60000;
+        if (n && n !== myName() && !wasHere && !quiet && window.showText) hello[n] = Date.now(), showText(n === 'DEEPBLUE' ? 'just logged in 🎮 Player 1 is here' : 'just came online ♡', n);
+      }
+      if (m.t === 'heart' && n !== myName()) gotHeart(n);
+      render();
+    };
+    ws.onclose = () => {
+      ws = null; render();
+      if (!document.hidden) setTimeout(connect, retry); retry = Math.min(30000, retry * 2);
+    };
+    // Hearts that arrived while away get one summary text once the catch-up is done.
+    setTimeout(() => {
+      if (!away || !window.showText) return;
+      showText(`While you were away: ${away} ♡ ${away === 1 ? 'was' : 'were'} sent your way`, [...awayFrom].join(' & '));
+      away = 0; awayFrom.clear();
+    }, 2500);
+  }
+  function gotHeart(n) {
+    rain(['♡', '♥', '💗', '💖'], ['#ff75af', '#ff4eab', '#ffd1e6'], 60);
+    if (window.showText) showText('sent you a heart ♡', n || 'SOMEONE');
+  }
+
+  $('send-heart').addEventListener('click', () => {
+    const now = Date.now();
+    if (now - (window._lastHeart || 0) < 2500) return;
+    window._lastHeart = now;
+    send('heart');
+    restart($('send-heart'), 'sent');
+    rain(['♡', '♥'], ['#ff75af', '#ffd1e6'], 18);
+    const others = Object.keys(online());
+    cheatBanner(others.length ? '♡ SENT TO ' + others.join(' & ') : '♡ SENT · THEY\'LL GET IT WHEN THEY\'RE BACK', true);
+  });
+
+  // Character select
+  function ask() {
+    $('who').classList.remove('hidden');
+    if (matchMedia('(hover:hover)').matches) $('who-input').focus();
+  }
+  function choose(name) {
+    const was = myName();
+    me = clean(name) || '-'; store('svcName', me);
+    $('who').classList.add('hidden');
+    if (ws && ws.readyState === 1 && was !== myName()) send('join');
+    render();
+  }
+  document.querySelectorAll('.who-pick button').forEach((b) => b.addEventListener('click', () => choose(b.dataset.name)));
+  $('who-form').addEventListener('submit', (e) => { e.preventDefault(); choose($('who-input').value); });
+  $('who-skip').addEventListener('click', () => choose('-'));
+  $('lobby-who').addEventListener('click', ask);
+
+  // Leaving the page / switching apps counts as offline; coming back says hello again.
+  addEventListener('pagehide', () => send('bye', true));
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) { send('bye', true); return; }
+    if (!ws) connect(); else if (ws.readyState === 1) send('join');
+  });
+  setInterval(() => { if (!document.hidden && ws && ws.readyState === 1) send('beat'); render(); }, BEAT);
+
+  $('lobby').classList.remove('hidden');
+  render();
+  connect();
+  if (!me) setTimeout(ask, 600);
 })();
 
 /* ---------- start ---------- */
