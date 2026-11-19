@@ -297,9 +297,9 @@ body.shake main,body.shake header{animation:shake .45s}
 .who-card{width:min(420px,100%);text-align:center;padding:26px 22px 18px;border:1px solid #5ff3ff88;border-radius:16px;background:#0b0614f2;box-shadow:0 18px 60px #000c,0 0 30px #5ff3ff33}
 .who-card>small{font-size:10px;font-weight:900;letter-spacing:.3em;color:var(--cyan)}
 .who-card h3{font-family:'Barlow Condensed',Impact,sans-serif;font-size:clamp(38px,9vw,52px);font-weight:900;letter-spacing:.04em;margin:6px 0 18px;line-height:1;color:#fff;text-shadow:0 0 20px #ff4eab}
-.who-pick{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.who-pick button{display:flex;flex-direction:column;align-items:center;gap:4px;padding:18px 10px;border-radius:12px;font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;letter-spacing:.06em}
-.who-pick button:first-child{background:var(--cyan);box-shadow:0 8px 30px #5ff3ff55}
+.who-pick{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-bottom:4px}
+.who-pick:empty{display:none}
+.who-pick button{display:flex;flex-direction:column;align-items:center;gap:4px;padding:18px 10px;border-radius:12px;font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;letter-spacing:.06em;flex:1 1 40%;max-width:100%}
 .who-pick small{font:800 10px 'DM Sans',sans-serif;letter-spacing:.2em;opacity:.7}
 .who-form{display:flex;gap:8px;margin-top:12px}
 .who-form input{flex:1;min-width:0;padding:12px 14px;border-radius:10px;border:1px solid #ffffff44;background:#000a;color:#fff;font:700 14px 'DM Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase}

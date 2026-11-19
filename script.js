@@ -770,7 +770,9 @@ document.querySelectorAll('#cheat-list li').forEach((li) => li.addEventListener(
   const BEAT = 4 * 60000, EXPIRE = 9 * 60000;
   const store = (k, v) => { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) {} };
   const ID = Math.random().toString(36).slice(2, 10);
-  let me = store('svcName') || '';            // '' = not asked yet, '-' = just looking
+  let me = store('svcName') || '';
+  const lastSeen = +store('svcSeen') || 0;     // when this device last heard from the room
+  let known = []; try { known = JSON.parse(store('svcNames') || '[]'); } catch (e) {}            // '' = not asked yet, '-' = just looking
   const peers = {};                           // id -> { n: name, seen: ms }
   const hello = {};                           // name -> last time we announced them
   let ws = null, lastId = '', retry = 1000, connectedAt = 0, away = 0, awayFrom = new Set();
@@ -805,8 +807,8 @@ document.querySelectorAll('#cheat-list li').forEach((li) => li.addEventListener(
   function connect() {
     let since = lastId;
     if (!since) {                             // first time: catch up on hearts sent since the last visit (ntfy keeps 12 h)
-      const last = +store('svcSeen') || 0;
-      since = last ? String(Math.floor(Math.max(last, Date.now() - 11 * 3600000) / 1000)) : '';
+      // Also how we learn the names people have typed recently.
+      since = String(Math.floor((Date.now() - 11 * 3600000) / 1000));
     }
     ws = new WebSocket('wss://ntfy.sh/' + topic + '/ws' + (since ? '?since=' + since : ''));
     connectedAt = Date.now();
@@ -817,8 +819,9 @@ document.querySelectorAll('#cheat-list li').forEach((li) => li.addEventListener(
       lastId = d.id; store('svcSeen', String(Date.now()));
       if (m.id === ID) return;
       const n = clean(m.n), old = d.time * 1000 < connectedAt - 5000;
+      if (n) remember(n);
       if (old) {                              // missed while away: only hearts matter
-        if (m.t === 'heart' && n !== myName()) { away++; awayFrom.add(n || 'SOMEONE'); }
+        if (m.t === 'heart' && n !== myName() && lastSeen && d.time * 1000 > lastSeen) { away++; awayFrom.add(n || 'SOMEONE'); }
         return;
       }
       const wasHere = n && Object.keys(online()).includes(n);
@@ -859,19 +862,34 @@ document.querySelectorAll('#cheat-list li').forEach((li) => li.addEventListener(
     cheatBanner(others.length ? '♡ SENT TO ' + others.join(' & ') : '♡ SENT · THEY\'LL GET IT WHEN THEY\'RE BACK', true);
   });
 
-  // Character select
+  // Character select: starts empty; every name anyone types becomes a one-tap button.
+  function remember(n) {
+    if (!n || known.includes(n)) return;
+    known = [n, ...known].slice(0, 8); store('svcNames', JSON.stringify(known));
+    renderPick();
+  }
+  function renderPick() {
+    const box = $('who-pick'); box.textContent = '';
+    known.forEach((n, i) => {
+      const b = document.createElement('button'); b.type = 'button'; b.textContent = n;
+      b.style.background = TOKEN_COLORS_UI[i % TOKEN_COLORS_UI.length];
+      b.addEventListener('click', () => choose(n));
+      box.append(b);
+    });
+  }
+  const TOKEN_COLORS_UI = ['#5ff3ff', '#ff77ad', '#ffd18d', '#a88aff', '#7dff9b'];
   function ask() {
+    renderPick(); $('who-input').value = '';
     $('who').classList.remove('hidden');
     if (matchMedia('(hover:hover)').matches) $('who-input').focus();
   }
   function choose(name) {
     const was = myName();
-    me = clean(name) || '-'; store('svcName', me);
+    me = clean(name) || '-'; store('svcName', me); if (me !== '-') remember(me);
     $('who').classList.add('hidden');
     if (ws && ws.readyState === 1 && was !== myName()) send('join');
     render();
   }
-  document.querySelectorAll('.who-pick button').forEach((b) => b.addEventListener('click', () => choose(b.dataset.name)));
   $('who-form').addEventListener('submit', (e) => { e.preventDefault(); choose($('who-input').value); });
   $('who-skip').addEventListener('click', () => choose('-'));
   $('lobby-who').addEventListener('click', ask);
