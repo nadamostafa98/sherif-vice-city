@@ -847,8 +847,11 @@ document.querySelectorAll('#cheat-list li').forEach((li) => li.addEventListener(
     }, 2500);
   }
   function gotHeart(n) {
-    rain(['♡', '♥', '💗', '💖'], ['#ff75af', '#ff4eab', '#ffd1e6'], 60);
-    if (window.showText) showText('sent you a heart ♡', n || 'SOMEONE');
+    const who = n || 'SOMEONE';
+    rain(['♡', '♥', '💗', '💖'], ['#ff75af', '#ff4eab', '#ffd1e6'], 50);
+    rain(['♥ ' + who], ['#ffffff', '#ffd1e6', '#ff9ccb'], 14, 22);   // hearts with the sender's name on them
+    cheatBanner('♡ FROM ' + who + ' ♡', true);
+    if (window.showText) showText('sent you a heart ♡', who);
   }
 
   $('send-heart').addEventListener('click', () => {
